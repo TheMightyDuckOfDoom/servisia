@@ -1,0 +1,6 @@
+[submodule "serv"]
+	path = serv
+	url = https://github.com/olofk/serv
+[submodule "subservient"]
+	path = subservient
+	url = https://github.com/olofk/subservient

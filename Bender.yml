@@ -1,0 +1,47 @@
+# Copyright 2023 Tobias Senti
+# Solderpad Hardware License, Version 0.51, see LICENSE for details.
+# SPDX-License-Identifier: SHL-0.51
+
+package: 
+  name: servisia
+  authors: 
+    - "Tobias Senti"
+
+sources:
+  # Serv
+  - files:
+    - serv/rtl/serv_bufreg.v
+    - serv/rtl/serv_bufreg2.v
+    - serv/rtl/serv_alu.v
+    - serv/rtl/serv_csr.v
+    - serv/rtl/serv_ctrl.v
+    - serv/rtl/serv_decode.v
+    - serv/rtl/serv_immdec.v
+    - serv/rtl/serv_mem_if.v
+    - serv/rtl/serv_rf_if.v
+    - serv/rtl/serv_rf_ram_if.v
+    - serv/rtl/serv_rf_ram.v
+    - serv/rtl/serv_state.v
+    - serv/rtl/serv_top.v
+    - serv/rtl/serv_rf_top.v
+    - serv/rtl/serv_aligner.v
+    - serv/rtl/serv_compdec.v
+
+  # Serving
+  - files:
+    - serv/serving/serving_arbiter.v
+    - serv/serving/serving_mux.v
+    - serv/serving/serving_ram.v
+    - serv/serving/serving.v
+
+  # Subservient
+  - files:
+    - subservient/rtl/subservient_rf_ram_if.v
+    - subservient/rtl/subservient_ram.v
+    - subservient/rtl/subservient_debug_switch.v
+    - subservient/rtl/subservient_core.v
+    - subservient/rtl/subservient_gpio.v
+    - subservient/rtl/subservient.v
+
+  # Servisia
+  - rtl/servisia.v
