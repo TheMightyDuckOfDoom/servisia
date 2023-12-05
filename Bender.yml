@@ -38,10 +38,16 @@ sources:
   - files:
     - subservient/rtl/subservient_rf_ram_if.v
     - subservient/rtl/subservient_ram.v
+    - subservient/rtl/subservient_generic_ram.v
     - subservient/rtl/subservient_debug_switch.v
     - subservient/rtl/subservient_core.v
     - subservient/rtl/subservient_gpio.v
     - subservient/rtl/subservient.v
 
   # Servisia
+  - rtl/sram_rw.v
   - rtl/servisia.v
+
+  - target: testbench
+    files:
+      - test/servisia_tb.v

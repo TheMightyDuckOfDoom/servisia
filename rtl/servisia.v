@@ -8,38 +8,25 @@ module servisia (
     input wire  rst_ni,
 
     // GPIOs
-    output wire [num_gpios-1:0] q_o,
-
-    // SRAM interface
-    output wire          sram_cs_no,
-    output wire          sram_wen_no,
-    output wire [aw-1:0] sram_addr_o,
-    inout  wire [7:0]    sram_data_io
+    output wire [num_gpios-1:0] gpio_o
 );
-    parameter memsize = 65536;
-    parameter aw = $clog2(memsize);
+    parameter aw = 14;
     parameter num_gpios = 1;
+    parameter memsize = 1 << aw;
 
     wire sram_wen, sram_ren;
     wire [aw-1:0] sram_raddr, sram_waddr;
     wire [7:0] sram_wdata, sram_rdata;
 
-    assign sram_cs_no = !(sram_wen | sram_ren);
-    assign sram_addr_o = !sram_wen_no ? sram_waddr : sram_raddr;
-
-    assign sram_wen_no = !sram_wen;
-    assign sram_rdata = sram_ren ? sram_data_io : 8'd0;
-
-    generate
-        genvar i;
-        for(i = 0; i < 8; i = i + 1) begin
-            ZBUF_74LVC1G125 i_data_zbuf (
-                .A    ( sram_wdata[i]   ),
-                .EN_N ( sram_wen_no     ),
-                .Y    ( sram_data_io[i] )
-            );
-        end
-    endgenerate
+    sram_rw i_sram_rw (
+        .clk_i   ( clk_i      ),
+        .rst_ni  ( rst_ni     ),
+        .addr_i  ( sram_wen ? sram_waddr : sram_raddr ),
+        .wdata_i ( sram_wdata ),
+        .write_i ( sram_wen   ),
+        .rdata_o ( sram_rdata ),
+        .read_i  ( sram_ren   )
+    );
 
     subservient #(
         .memsize  ( memsize ),
@@ -68,6 +55,6 @@ module servisia (
         .o_wb_dbg_ack (       ),
 
         // External I/O
-        .o_gpio ( q_o )
+        .o_gpio ( gpio_o )
     );
 endmodule

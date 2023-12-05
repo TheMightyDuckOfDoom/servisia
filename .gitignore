@@ -1,1 +1,10 @@
 out
+obj_dir
+
+*.log
+*.vcd
+
+programs/*.binary
+programs/*.bin
+programs/*.elf
+programs/*.o
