@@ -29,7 +29,12 @@ module servisia_tb #(
     $display("Loading program");
     `ifdef POST_SYNTHESIS
       $readmemh(program_file, i_dut.i_sram_rw__i_sram.i_sram_model.mem);
-    `else
+    `endif
+    `ifdef POST_LAYOUT
+      $readmemh(program_file, i_dut.i_sram_rw__i_sram.i_sram_model.mem);
+    `endif
+    `ifndef POST_SYNTHESIS
+    `ifndef POST_LAYOUT
       $readmemh(program_file, i_dut.i_sram_rw.i_sram.i_sram_model.mem);
       for(int i = 0; i < 20; i++) begin
         $display("mem[%d] = %h", i, i_dut.i_sram_rw.i_sram.i_sram_model.mem[i]);
@@ -39,12 +44,14 @@ module servisia_tb #(
         $display("mem[%d] = %h", i, i_generic_ram.mem[i]);
       end
     `endif
+    `endif
 
     // Running clock
     forever #CLK_PERIOD clk = ~clk;
   end
   
   `ifndef POST_SYNTHESIS
+  `ifndef POST_LAYOUT
     // Reference memory
     wire [7:0] sram_rdata_ref;
     subservient_generic_ram #(
@@ -67,6 +74,7 @@ module servisia_tb #(
         end
     end
   `endif
+  `endif
 
   // Instantiate DUT
   servisia i_dut (
@@ -85,12 +93,19 @@ module servisia_tb #(
     int cycle;
     cycle = 0;
 
-    `ifdef POST_SYNTHESIS
+    `ifndef POST_LAYOUT
       $display("Starting post synthesis simulation");
       $dumpfile("dump_post.vcd");
-    `else
+    `endif
+    `ifndef POST_SYNTHESIS
+      $display("Starting layout simulation");
+      $dumpfile("dump_layout.vcd");
+    `endif
+    `ifndef POST_SYNTHESIS
+    `ifndef POST_LAYOUT
       $display("Starting simulation");
       $dumpfile("dump.vcd");
+    `endif
     `endif
     $dumpvars();
 
@@ -111,8 +126,14 @@ module servisia_tb #(
 
     `ifdef POST_SYNTHESIS
       $display("Post Synthesis Simulation finished!");
-    `else
+    `endif
+    `ifdef POST_LAYOUT
+      $display("Layout Simulation finished!");
+    `endif
+    `ifndef POST_SYNTHESIS
+    `ifndef POST_LAYOUT
       $display("Simulation finished!");
+    `endif
     `endif
     // Stop simulation
     $finish;

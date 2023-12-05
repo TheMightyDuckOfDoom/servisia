@@ -16,6 +16,12 @@ sim: programs/hello.binary sim_exe
 sim_post: programs/hello.binary sim_post_exe
 	./obj_dir/servisia_tb
 
+sim_layout: programs/hello.binary sim_layout_exe
+	./obj_dir/servisia_tb
+
+sim_layout_exe: ../liberty74/openroad/out/servisia.final.v rtl/servisia_tb.sv
+	verilator --trace -DPOST_LAYOUT -j ../liberty74/openroad/out/servisia.final.v ../liberty74/pdk/verilog/74lvc1g_pwr_pins.v ../liberty74/pdk/verilog/74vhc_pwr_pins.v ../liberty74/pdk/verilog/W24129A_pwr_pins.v ../liberty74/verilog_models/* rtl/servisia_tb.sv --binary --top-module servisia_tb --Wno-UNOPTFLAT --Wno-IMPLICIT -o servisia_tb
+
 sim_post_exe: ../liberty74/out/servisia.v rtl/servisia_tb.sv
 	verilator --trace -DPOST_SYNTHESIS -j ../liberty74/out/servisia.v ../liberty74/pdk/verilog/74lvc1g.v ../liberty74/pdk/verilog/74vhc.v ../liberty74/pdk/verilog/W24129A.v ../liberty74/verilog_models/* rtl/servisia_tb.sv --binary --top-module servisia_tb --Wno-UNOPTFLAT -o servisia_tb
 
