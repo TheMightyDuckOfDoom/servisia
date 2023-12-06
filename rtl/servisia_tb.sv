@@ -9,21 +9,12 @@ module servisia_tb #(
   parameter         program_file = "programs/hello.binary"
 ) ();
 
-  logic clk, rst_n;
+  logic clk;
   logic [7:0] gpio;
 
   initial begin
     integer file;
-
-    // Reset
     clk = 1'b0;
-    rst_n = 1'b0;
-
-    #CLK_HALF
-    clk = 1'b1;
-    #CLK_HALF
-    clk = 1'b0;
-    rst_n = 1'b1;
 
     // Load program
     $display("Loading program");
@@ -59,7 +50,7 @@ module servisia_tb #(
         .memfile ( program_file )
     ) i_generic_ram (
         .i_clk   ( i_dut.clk_i      ),
-        .i_rst   ( i_dut.rst_ni     ),
+        .i_rst   ( i_dut.rst_n      ),
         .i_waddr ( i_dut.sram_waddr ),
         .i_wdata ( i_dut.sram_wdata ),
         .i_wen   ( i_dut.sram_wen   ),
@@ -76,19 +67,27 @@ module servisia_tb #(
   `endif
   `endif
 
+  // Apply Power -> Set VDD and GND to 1
+  // Default / Unconnected is 0
+  `ifdef TARGET_SIM_LAYOUT
+    assign i_dut.VDD = 1'b1;
+    assign i_dut.GND = 1'b1;
+  `endif
+
   // Instantiate DUT
   servisia i_dut (
     .clk_i  ( clk   ),
-    .rst_ni ( rst_n ),
     .gpio_o ( gpio  )
   );
 
+  // Monitor GPIO
   always @(gpio) begin
     $display();
     $display("GPIO change! gpio=%d %c", gpio, gpio);
     $display();
   end
 
+  // Testbench
   initial begin
     int cycle;
     cycle = 0;
@@ -108,11 +107,6 @@ module servisia_tb #(
     `endif
     `endif
     $dumpvars();
-
-    // Wait for reset to be released
-    @(posedge rst_n);
-
-    $display("Reset released");
 
     repeat (SIM_CYCLES) begin 
       @(posedge clk);

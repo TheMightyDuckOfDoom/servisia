@@ -3,9 +3,8 @@
 // SPDX-License-Identifier: SHL-0.51
 
 module servisia (
-    // Clock and Reset
+    // Clock
     input wire  clk_i,
-    input wire  rst_ni,
 
     // GPIOs
     output wire [num_gpios-1:0] gpio_o
@@ -13,6 +12,8 @@ module servisia (
     parameter integer aw = 14;
     parameter integer num_gpios = 8;
     parameter integer memsize = 1 << aw;
+
+    wire rst_n;
 
     wire          sram_wen, sram_ren;
     wire [aw-1:0] sram_raddr, sram_waddr;
@@ -27,11 +28,19 @@ module servisia (
     wire        wb_core_ack;
 
     wire [num_gpios-1:0] wb_gpio_rdt;
+
+    // Reset generator
+    reset_gen #(
+        .RESET_CYCLES ( 2 )
+    ) i_reset_gen (
+        .clk_i  ( clk_i ),
+        .rst_no ( rst_n )
+    );
     
     // SRAM interface
     sram_rw i_sram_rw (
         .clk_i   ( clk_i      ),
-        .rst_ni  ( rst_ni     ),
+        .rst_ni  ( rst_n      ),
         .addr_i  ( sram_wen ? sram_waddr : sram_raddr ),
         .wdata_i ( sram_wdata ),
         .write_i ( sram_wen   ),
@@ -47,7 +56,7 @@ module servisia (
         .WIDTH ( num_gpios )
     ) gpio (
         .wb_clk_i ( clk_i       ),
-        .wb_rst_i ( !rst_ni     ),
+        .wb_rst_i ( !rst_n      ),
         .wb_dat_i ( wb_core_dat[num_gpios-1:0] ),
         .wb_we_i  ( wb_core_we  ),
         .wb_stb_i ( wb_core_stb ),
@@ -61,9 +70,9 @@ module servisia (
         .memsize  ( memsize ),
         .WITH_CSR ( 0       )
     ) i_core (
-        .i_clk       ( clk_i   ),
-        .i_rst       ( !rst_ni ),
-        .i_timer_irq ( 1'b0    ),
+        .i_clk       ( clk_i  ),
+        .i_rst       ( !rst_n ),
+        .i_timer_irq ( 1'b0   ),
 
         //SRAM interface
         .o_sram_waddr ( sram_waddr ),

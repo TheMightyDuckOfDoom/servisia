@@ -58,6 +58,7 @@ sources:
     - subservient/rtl/subservient.v
 
     # Servisia
+    - rtl/reset_gen.v
     - rtl/sram_rw.v
     - rtl/servisia_gpo.v
     - rtl/servisia.v
