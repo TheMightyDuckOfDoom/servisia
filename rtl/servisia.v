@@ -10,14 +10,25 @@ module servisia (
     // GPIOs
     output wire [num_gpios-1:0] gpio_o
 );
-    parameter aw = 14;
-    parameter num_gpios = 1;
-    parameter memsize = 1 << aw;
+    parameter integer aw = 14;
+    parameter integer num_gpios = 8;
+    parameter integer memsize = 1 << aw;
 
-    wire sram_wen, sram_ren;
+    wire          sram_wen, sram_ren;
     wire [aw-1:0] sram_raddr, sram_waddr;
-    wire [7:0] sram_wdata, sram_rdata;
+    wire    [7:0] sram_wdata, sram_rdata;
 
+    wire [31:0]	wb_core_adr;
+    wire [31:0]	wb_core_dat;
+    wire  [3:0] wb_core_sel;
+    wire        wb_core_we;
+    wire        wb_core_stb;
+    wire [31:0] wb_core_rdt;
+    wire        wb_core_ack;
+
+    wire [num_gpios-1:0] wb_gpio_rdt;
+    
+    // SRAM interface
     sram_rw i_sram_rw (
         .clk_i   ( clk_i      ),
         .rst_ni  ( rst_ni     ),
@@ -28,13 +39,31 @@ module servisia (
         .read_i  ( sram_ren   )
     );
 
-    subservient #(
+    // GPIO Read Data
+    assign wb_core_rdt[31:num_gpios] = 'd0;
+    assign wb_core_rdt[num_gpios-1:0] = wb_gpio_rdt;
+
+    servisia_gpo #(
+        .WIDTH ( num_gpios )
+    ) gpio (
+        .wb_clk_i ( clk_i       ),
+        .wb_rst_i ( !rst_ni     ),
+        .wb_dat_i ( wb_core_dat[num_gpios-1:0] ),
+        .wb_we_i  ( wb_core_we  ),
+        .wb_stb_i ( wb_core_stb ),
+        .wb_rdt_o ( wb_gpio_rdt ),
+        .wb_ack_o ( wb_core_ack ),
+        .gpio_o   ( gpio_o      )
+    );
+
+    // Subservient core
+    subservient_core #(
         .memsize  ( memsize ),
         .WITH_CSR ( 0       )
-    ) i_soc (
-        // Clock & reset
-        .i_clk ( clk_i   ),
-        .i_rst ( !rst_ni ),
+    ) i_core (
+        .i_clk       ( clk_i   ),
+        .i_rst       ( !rst_ni ),
+        .i_timer_irq ( 1'b0    ),
 
         //SRAM interface
         .o_sram_waddr ( sram_waddr ),
@@ -54,7 +83,14 @@ module servisia (
         .o_wb_dbg_rdt (       ),
         .o_wb_dbg_ack (       ),
 
-        // External I/O
-        .o_gpio ( gpio_o )
+        //Peripheral interface
+        .o_wb_adr ( wb_core_adr ),
+        .o_wb_dat ( wb_core_dat ),
+        .o_wb_sel ( wb_core_sel ),
+        .o_wb_we  ( wb_core_we  ),
+        .o_wb_stb ( wb_core_stb ),
+        .i_wb_rdt ( wb_core_rdt ),
+        .i_wb_ack ( wb_core_ack )
     );
+
 endmodule

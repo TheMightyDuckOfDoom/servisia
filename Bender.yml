@@ -7,9 +7,24 @@ package:
   authors: 
     - "Tobias Senti"
 
+dependencies:
+  liberty74: { git: "git://github.com/TheMightyDuckOfDoom/liberty74.git", rev: master }
+
 sources:
-  # Serv
-  - files:
+  # Post Synthesis Simulation
+  - target: SIM_SYNTH
+    files:
+      - ../liberty74/out/servisia.v
+
+  # Post Layout Simulation
+  - target: SIM_LAYOUT
+    files:
+      - ../liberty74/openroad/out/servisia.final.v
+
+  # RTL Simulation
+  - target: any(SIM, SYNTH)
+    files:
+    # Serv
     - serv/rtl/serv_bufreg.v
     - serv/rtl/serv_bufreg2.v
     - serv/rtl/serv_alu.v
@@ -27,15 +42,13 @@ sources:
     - serv/rtl/serv_aligner.v
     - serv/rtl/serv_compdec.v
 
-  # Serving
-  - files:
+    # Serving
     - serv/serving/serving_arbiter.v
     - serv/serving/serving_mux.v
     - serv/serving/serving_ram.v
     - serv/serving/serving.v
 
-  # Subservient
-  - files:
+    # Subservient
     - subservient/rtl/subservient_rf_ram_if.v
     - subservient/rtl/subservient_ram.v
     - subservient/rtl/subservient_generic_ram.v
@@ -44,10 +57,12 @@ sources:
     - subservient/rtl/subservient_gpio.v
     - subservient/rtl/subservient.v
 
-  # Servisia
-  - rtl/sram_rw.v
-  - rtl/servisia.v
+    # Servisia
+    - rtl/sram_rw.v
+    - rtl/servisia_gpo.v
+    - rtl/servisia.v
 
-  - target: testbench
+  # Testbench
+  - target: any(SIM, SIM_SYNTH, SIM_LAYOUT)
     files:
-      - test/servisia_tb.v
+      - rtl/servisia_tb.sv

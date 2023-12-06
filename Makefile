@@ -4,32 +4,33 @@
 
 all: prepare_synth
 
+# Initialize submodules
 init:
 	git submodule update --init
 
+# Update submodules
 update:
 	git submodule update
 
-sim: programs/hello.binary sim_exe
+# Simulate RTL
+sim: programs/hello.binary
+	bender script verilator -t SIM > out/sim_script.list
+	verilator --trace -j -F out/sim_script.list --binary --top-module servisia_tb --Wno-UNOPTFLAT -o servisia_tb
 	./obj_dir/servisia_tb
 
-sim_post: programs/hello.binary sim_post_exe
+# Simulate Synthesis
+sim_synth: programs/hello.binary
+	bender script verilator -t SIM_SYNTH > out/sim_synth_script.list
+	verilator --trace -j -F out/sim_synth_script.list --binary --top-module servisia_tb --Wno-UNOPTFLAT -o servisia_tb
 	./obj_dir/servisia_tb
 
-sim_layout: programs/hello.binary sim_layout_exe
+# Simulate Layout
+sim_layout: programs/hello.binary
+	bender script verilator -t SIM_LAYOUT > out/sim_script.list
+	verilator --trace -j -F out/sim_script.list --binary --top-module servisia_tb --Wno-UNOPTFLAT --Wno-IMPLICIT -o servisia_tb
 	./obj_dir/servisia_tb
 
-sim_layout_exe: ../liberty74/openroad/out/servisia.final.v rtl/servisia_tb.sv
-	verilator --trace -DPOST_LAYOUT -j ../liberty74/openroad/out/servisia.final.v ../liberty74/pdk/verilog/74lvc1g_pwr_pins.v ../liberty74/pdk/verilog/74vhc_pwr_pins.v ../liberty74/pdk/verilog/W24129A_pwr_pins.v ../liberty74/verilog_models/* rtl/servisia_tb.sv --binary --top-module servisia_tb --Wno-UNOPTFLAT --Wno-IMPLICIT -o servisia_tb
-
-sim_post_exe: ../liberty74/out/servisia.v rtl/servisia_tb.sv
-	verilator --trace -DPOST_SYNTHESIS -j ../liberty74/out/servisia.v ../liberty74/pdk/verilog/74lvc1g.v ../liberty74/pdk/verilog/74vhc.v ../liberty74/pdk/verilog/W24129A.v ../liberty74/verilog_models/* rtl/servisia_tb.sv --binary --top-module servisia_tb --Wno-UNOPTFLAT -o servisia_tb
-
-sim_exe: rtl/*.v out/servisia.v
-	verilator --trace -j out/servisia.v subservient/rtl/subservient_generic_ram.v ../liberty74/pdk/verilog/74lvc1g.v ../liberty74/pdk/verilog/74vhc.v ../liberty74/pdk/verilog/W24129A.v ../liberty74/verilog_models/* rtl/servisia_tb.sv --binary --top-module servisia_tb --Wno-UNOPTFLAT -o servisia_tb
-
-prepare_synth: out/servisia.v
-
+# Compile Programs
 programs/%.binary: programs/%.bin
 	hexdump -v -e '1/1 "%02X" "\n"' $< > $@
 
@@ -44,13 +45,20 @@ programs/hello.elf: programs/hello.o programs/sections.lds
 programs/hello.o: programs/hello.S
 	/opt/rv32i/bin/riscv32-unknown-elf-gcc -c -mabi=ilp32 -march=rv32i -o programs/hello.o programs/hello.S
 
-out/servisia.v: rtl/*.v out
-	bender sources -f > out/sources.json
-	morty -f out/sources.json --top servisia > out/servisia.v
+# Synthesize
+synth: prepare_synth
+	cd ../liberty74 && make synth
 
+# Prepare for Synthesis
+prepare_synth: out
+	bender sources -f -t SYNTH > out/synth_sources.json
+	morty -f out/synth_sources.json --top servisia > out/servisia.v
+
+# Create output directory
 out:
 	mkdir -p out
 
+# Clean
 clean:
 	rm -rf out
 	rm -rf obj_dir

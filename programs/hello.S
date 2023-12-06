@@ -2,41 +2,34 @@
 #define GPIO_BASE 0x40000000
 #endif
 
-#ifndef DELAY
-#define DELAY 0x1 /* Loop 100000 times before inverting the LED */
-#endif
-	
-	/*
-	a0 = GPIO Base address
-	t0 = Value
-	t1 = Timer max value
-	t2 = Current timer value
-
-	*/
-
 .globl _start
 _start:
-	/* Load GPIO base address to a0 */
+	// Load GPIO_BASE
 	lui a0, %hi(GPIO_BASE)
 	addi a0, a0, %lo(GPIO_BASE)
 
-	/* Set timer value to control blink speed */
-	li t1, DELAY
+	// Load string address
+	lui a1, %hi(_hello_world_string)
+	addi a1, a0, %lo(_hello_world_string)
 
-	/* Clear t0 */
-	addi	t0, zero, 0
-bl1:
-	/* Write to LEDs */
+_loop:
+	// Load character from string
+	lb t0, 0(a1)
+
+	// If end of string, halt
+	beq t0, zero, _halt
+
+	// Write to GPIO
 	sb t0, 0(a0)
 
-	/* invert LED */
-	xori t0, t0, 1
+	// Increment pointer
+	addi a1, a1, 1
+	j _loop
 
-	/* Reset timer */
-	and t2, zero, zero
+// Halt
+_halt:
+	j _halt
 
-	/* Delay loop */
-time1:
-	addi t2, t2, 1
-	bne t1, t2, time1
-	j bl1
+.data
+_hello_world_string:
+    .string "Hello World!"

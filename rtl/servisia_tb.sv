@@ -10,7 +10,7 @@ module servisia_tb #(
 ) ();
 
   logic clk, rst_n;
-  logic gpio;
+  logic [7:0] gpio;
 
   initial begin
     integer file;
@@ -27,14 +27,14 @@ module servisia_tb #(
 
     // Load program
     $display("Loading program");
-    `ifdef POST_SYNTHESIS
+    `ifdef TARGET_SIM_SYNTH
       $readmemh(program_file, i_dut.i_sram_rw__i_sram.i_sram_model.mem);
     `endif
-    `ifdef POST_LAYOUT
+    `ifdef TARGET_SIM_LAYOUT
       $readmemh(program_file, i_dut.i_sram_rw__i_sram.i_sram_model.mem);
     `endif
-    `ifndef POST_SYNTHESIS
-    `ifndef POST_LAYOUT
+    `ifndef TARGET_SIM_SYNTH
+    `ifndef TARGET_SIM_LAYOUT
       $readmemh(program_file, i_dut.i_sram_rw.i_sram.i_sram_model.mem);
       for(int i = 0; i < 20; i++) begin
         $display("mem[%d] = %h", i, i_dut.i_sram_rw.i_sram.i_sram_model.mem[i]);
@@ -50,8 +50,8 @@ module servisia_tb #(
     forever #CLK_PERIOD clk = ~clk;
   end
   
-  `ifndef POST_SYNTHESIS
-  `ifndef POST_LAYOUT
+  `ifndef TARGET_SIM_SYNTH
+  `ifndef TARGET_SIM_LAYOUT
     // Reference memory
     wire [7:0] sram_rdata_ref;
     subservient_generic_ram #(
@@ -85,7 +85,7 @@ module servisia_tb #(
 
   always @(gpio) begin
     $display();
-    $display("GPIO change! gpio=%b", gpio);
+    $display("GPIO change! gpio=%d %c", gpio, gpio);
     $display();
   end
 
@@ -93,16 +93,16 @@ module servisia_tb #(
     int cycle;
     cycle = 0;
 
-    `ifndef POST_LAYOUT
+    `ifndef TARGET_SIM_LAYOUT
       $display("Starting post synthesis simulation");
       $dumpfile("dump_post.vcd");
     `endif
-    `ifndef POST_SYNTHESIS
+    `ifndef TARGET_SIM_SYNTH
       $display("Starting layout simulation");
       $dumpfile("dump_layout.vcd");
     `endif
-    `ifndef POST_SYNTHESIS
-    `ifndef POST_LAYOUT
+    `ifndef TARGET_SIM_SYNTH
+    `ifndef TARGET_SIM_LAYOUT
       $display("Starting simulation");
       $dumpfile("dump.vcd");
     `endif
@@ -124,14 +124,14 @@ module servisia_tb #(
       cycle++;
     end
 
-    `ifdef POST_SYNTHESIS
+    `ifdef TARGET_SIM_SYNTH
       $display("Post Synthesis Simulation finished!");
     `endif
-    `ifdef POST_LAYOUT
+    `ifdef TARGET_SIM_LAYOUT
       $display("Layout Simulation finished!");
     `endif
-    `ifndef POST_SYNTHESIS
-    `ifndef POST_LAYOUT
+    `ifndef TARGET_SIM_SYNTH
+    `ifndef TARGET_SIM_LAYOUT
       $display("Simulation finished!");
     `endif
     `endif

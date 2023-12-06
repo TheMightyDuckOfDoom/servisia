@@ -8,3 +8,5 @@ programs/*.binary
 programs/*.bin
 programs/*.elf
 programs/*.o
+
+Bender.local
