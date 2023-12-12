@@ -19,16 +19,16 @@ module servisia_tb #(
     // Load program
     $display("Loading program");
     `ifdef TARGET_SIM_SYNTH
-      $readmemh(program_file, i_dut.i_sram_rw__i_sram.i_sram_model.mem);
+      $readmemh(program_file, i_dut.i_servisia_mem__i_flash.i_sram_model.mem);
     `endif
     `ifdef TARGET_SIM_LAYOUT
-      $readmemh(program_file, i_dut.i_sram_rw__i_sram.i_sram_model.mem);
+      $readmemh(program_file, i_dut.i_servisia_mem__i_flash.i_sram_model.mem);
     `endif
     `ifndef TARGET_SIM_SYNTH
     `ifndef TARGET_SIM_LAYOUT
-      $readmemh(program_file, i_dut.i_sram_rw.i_sram.i_sram_model.mem);
+      $readmemh(program_file, i_dut.i_servisia_mem.i_flash.i_sram_model.mem);
       for(int i = 0; i < 20; i++) begin
-        $display("mem[%d] = %h", i, i_dut.i_sram_rw.i_sram.i_sram_model.mem[i]);
+        $display("mem[%d] = %h", i, i_dut.i_servisia_mem.i_flash.i_sram_model.mem[i]);
       end
       $display("Reference");
       for(int i = 0; i < 20; i++) begin
@@ -46,7 +46,7 @@ module servisia_tb #(
     // Reference memory
     wire [7:0] sram_rdata_ref;
     subservient_generic_ram #(
-        .depth   ( 1 << 14      ),
+        .depth   ( 1 << 21      ),
         .memfile ( program_file )
     ) i_generic_ram (
         .i_clk   ( i_dut.clk_i      ),

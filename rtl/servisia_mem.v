@@ -2,19 +2,18 @@
 // Solderpad Hardware License, Version 0.51, see LICENSE for details.
 // SPDX-License-Identifier: SHL-0.51
 
-module sram_rw (
+module servisia_mem (
     input wire clk_i,
     input wire rst_ni,
 
     input wire        read_i,
     input wire        write_i,
-    input wire [13:0] addr_i,
+    input wire [20:0] addr_i,
     input wire  [7:0] wdata_i,
     
     output reg [7:0] rdata_o
 );
     wire [7:0] data_z;
-
 
     generate;
         genvar i;
@@ -27,12 +26,23 @@ module sram_rw (
         end
     endgenerate
 
-    // Instantiate SRAM
-    (* keep *) W24129A_35 i_sram (
-        .CS_N ( clk_i             ),
+    // Instantiate FLASH
+    (* keep *) AM29F080B_90SF i_flash (
+        .RESET_N ( rst_ni ),
+        .READY (),
+        .CE_N ( clk_i && !addr_i[20] ),
         .WE_N ( read_i | !write_i ),
         .OE_N ( !read_i           ),
-        .A    ( addr_i            ),
+        .A    ( addr_i[19:0]      ),
+        .DQ   ( data_z            )
+    );
+
+    // Instantiate SRAM
+    (* keep *) W24129A_35 i_sram (
+        .CS_N ( clk_i && addr_i[20] ),
+        .WE_N ( read_i | !write_i ),
+        .OE_N ( !read_i           ),
+        .A    ( addr_i[13:0]      ),
         .IO   ( data_z            )
     );
 

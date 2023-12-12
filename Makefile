@@ -13,19 +13,19 @@ update:
 	git submodule update
 
 # Simulate RTL
-sim: programs/hello.binary
+sim: programs/hello.binary out
 	bender script verilator -t SIM > out/sim_script.list
 	verilator --trace -j -F out/sim_script.list --binary --top-module servisia_tb --Wno-UNOPTFLAT -o servisia_tb
 	./obj_dir/servisia_tb
 
 # Simulate Synthesis
-sim_synth: programs/hello.binary
+sim_synth: programs/hello.binary out
 	bender script verilator -t SIM_SYNTH > out/sim_synth_script.list
 	verilator --trace -j -F out/sim_synth_script.list --binary --top-module servisia_tb --Wno-UNOPTFLAT -o servisia_tb
 	./obj_dir/servisia_tb
 
 # Simulate Layout
-sim_layout: programs/hello.binary
+sim_layout: programs/hello.binary out
 	bender script verilator -t SIM_LAYOUT > out/sim_script.list
 	verilator --trace -j -F out/sim_script.list --binary --top-module servisia_tb --Wno-UNOPTFLAT --Wno-IMPLICIT -o servisia_tb
 	./obj_dir/servisia_tb

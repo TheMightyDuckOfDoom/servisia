@@ -59,7 +59,7 @@ sources:
 
     # Servisia
     - rtl/reset_gen.v
-    - rtl/sram_rw.v
+    - rtl/servisia_mem.v
     - rtl/servisia_gpo.v
     - rtl/servisia.v
 

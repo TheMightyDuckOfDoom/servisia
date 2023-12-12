@@ -9,7 +9,7 @@ module servisia (
     // GPIOs
     output wire [num_gpios-1:0] gpio_o
 );
-    parameter integer aw = 14;
+    parameter integer aw = 21;
     parameter integer num_gpios = 8;
     parameter integer memsize = 1 << aw;
 
@@ -38,7 +38,7 @@ module servisia (
     );
     
     // SRAM interface
-    sram_rw i_sram_rw (
+    servisia_mem i_servisia_mem (
         .clk_i   ( clk_i      ),
         .rst_ni  ( rst_n      ),
         .addr_i  ( sram_wen ? sram_waddr : sram_raddr ),
