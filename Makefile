@@ -2,6 +2,8 @@
 # Solderpad Hardware License, Version 0.51, see LICENSE for details.
 # SPDX-License-Identifier: SHL-0.51
 
+liberty74_path = $(shell bender path liberty74)
+
 all: prepare_synth
 
 # Initialize submodules
@@ -21,13 +23,13 @@ sim: programs/hello.binary out
 # Simulate Synthesis
 sim_synth: programs/hello.binary out
 	bender script verilator -t SIM_SYNTH > out/sim_synth_script.list
-	verilator --trace -j -F out/sim_synth_script.list --binary --top-module servisia_tb --Wno-UNOPTFLAT -o servisia_tb
+	verilator --trace -j -F out/sim_synth_script.list --binary --top-module servisia_tb --Wno-UNOPTFLAT --Wno-PINMISSING -o servisia_tb
 	./obj_dir/servisia_tb
 
 # Simulate Layout
 sim_layout: programs/hello.binary out
 	bender script verilator -t SIM_LAYOUT > out/sim_script.list
-	verilator --trace -j -F out/sim_script.list --binary --top-module servisia_tb --Wno-UNOPTFLAT --Wno-IMPLICIT -o servisia_tb
+	verilator --trace -j -F out/sim_script.list --binary --top-module servisia_tb --Wno-UNOPTFLAT --Wno-PINMISSING --Wno-IMPLICIT -o servisia_tb
 	./obj_dir/servisia_tb
 
 # Compile Programs
@@ -47,7 +49,11 @@ programs/hello.o: programs/hello.S
 
 # Synthesize
 synth: prepare_synth
-	cd ../liberty74 && make synth
+	cd ${liberty74_path} && make synth
+
+# Layout
+chip:
+	cd ${liberty74_path} && make chip
 
 # Prepare for Synthesis
 prepare_synth: out
