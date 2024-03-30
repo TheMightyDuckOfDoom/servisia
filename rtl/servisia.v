@@ -9,6 +9,15 @@ module servisia (
     input wire  rst_ni,
     `endif
 
+    `ifdef FPGA
+    // Memory Interface
+    output wire [20:0] addr_o,
+    output wire        write_o,
+    output wire [7:0]  wdata_o,
+    output wire        read_o,
+    input  wire [7:0]  rdata_i,
+    `endif
+
     // GPIOs
     output wire [num_gpios-1:0] gpio_o
 );
@@ -47,6 +56,13 @@ module servisia (
     `endif
     
     // SRAM interface
+    `ifdef FPGA
+    assign addr_o     = sram_wen ? sram_waddr : sram_raddr;
+    assign write_o    = sram_wen;
+    assign wdata_o    = sram_wdata;
+    assign read_o     = sram_ren;
+    assign sram_rdata = rdata_i;
+    `else
     servisia_mem i_servisia_mem (
         .clk_i   ( clk_i      ),
         .rst_ni  ( rst_n      ),
@@ -56,6 +72,7 @@ module servisia (
         .rdata_o ( sram_rdata ),
         .read_i  ( sram_ren   )
     );
+    `endif
 
     // GPIO Read Data
     assign wb_core_rdt[31:num_gpios] = 'd0;

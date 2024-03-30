@@ -68,6 +68,10 @@ prepare_synth_relay: out
 	bender sources -f -t SYNTH -t RELAY > out/synth_sources.json
 	morty -f out/synth_sources.json --top servisia > out/servisia.v
 
+prepare_synth_fpga: out
+	bender sources -f -t SYNTH -t FPGA > out/synth_sources.json
+	morty -f out/synth_sources.json --top servisia > out/servisia.v
+
 # Create output directory
 out:
 	mkdir -p out
