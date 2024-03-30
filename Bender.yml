@@ -57,11 +57,23 @@ sources:
     - subservient/rtl/subservient_gpio.v
     - subservient/rtl/subservient.v
 
-    # Servisia
-    - rtl/reset_gen.v
-    - rtl/servisia_mem.v
-    - rtl/servisia_gpo.v
-    - rtl/servisia.v
+  - target: CMOS
+    defines:
+      CMOS: ~
+    files:
+      - rtl/reset_gen.v
+      - rtl/servisia_mem.v
+      - rtl/servisia_gpo.v
+      - rtl/servisia.v
+
+  - target: RELAY
+    defines:
+      RELAY: ~
+    files:
+      - rtl/reset_gen.v
+      - rtl/servisia_mem.v
+      - rtl/servisia_gpo.v
+      - rtl/servisia.v
 
   # Testbench
   - target: any(SIM, SIM_SYNTH, SIM_LAYOUT)

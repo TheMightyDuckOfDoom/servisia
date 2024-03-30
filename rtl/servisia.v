@@ -3,8 +3,11 @@
 // SPDX-License-Identifier: SHL-0.51
 
 module servisia (
-    // Clock
+    // Clock and Reset
     input wire  clk_i,
+    `ifndef CMOS
+    input wire  rst_ni,
+    `endif
 
     // GPIOs
     output wire [num_gpios-1:0] gpio_o
@@ -31,13 +34,17 @@ module servisia (
 
     //(* keep *) LCD_16x2 lcd();
 
-    // Reset generator
-    reset_gen #(
-        .RESET_CYCLES ( 2 )
-    ) i_reset_gen (
-        .clk_i  ( clk_i ),
-        .rst_no ( rst_n )
-    );
+    `ifdef CMOS
+        // Reset generator
+        reset_gen #(
+            .RESET_CYCLES ( 2 )
+        ) i_reset_gen (
+            .clk_i  ( clk_i ),
+            .rst_no ( rst_n )
+        );
+    `else
+        assign rst_n = rst_ni;
+    `endif
     
     // SRAM interface
     servisia_mem i_servisia_mem (

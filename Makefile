@@ -51,13 +51,21 @@ programs/hello.o: programs/hello.S
 synth: prepare_synth
 	cd ${liberty74_path} && make synth
 
+# Synthesize Relay
+synth_relay: prepare_synth_relay
+	cd ${liberty74_path} && make synth
+
 # Layout
 chip:
 	cd ${liberty74_path} && make chip
 
 # Prepare for Synthesis
 prepare_synth: out
-	bender sources -f -t SYNTH > out/synth_sources.json
+	bender sources -f -t SYNTH -t CMOS > out/synth_sources.json
+	morty -f out/synth_sources.json --top servisia > out/servisia.v
+
+prepare_synth_relay: out
+	bender sources -f -t SYNTH -t RELAY > out/synth_sources.json
 	morty -f out/synth_sources.json --top servisia > out/servisia.v
 
 # Create output directory

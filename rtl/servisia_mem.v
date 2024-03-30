@@ -19,11 +19,20 @@ module servisia_mem (
     generate;
         genvar i;
         for (i = 0; i < 8; i = i + 1) begin : gen_tristate
-            ZBUF_74LVC1G125 i_tristate (
-                .A    ( wdata_i[i] ),
-                .Y    ( data_z[i] ),
-                .EN_N ( !write_i   )
-            );
+            `ifdef CMOS
+                ZBUF_74LVC1G125 i_tristate (
+                    .A    ( wdata_i[i] ),
+                    .Y    ( data_z[i] ),
+                    .EN_N ( !write_i   )
+                );
+            `endif
+            `ifdef RELAY
+                ZBUF_JY4100F_S_C i_tristate (
+                    .A    ( wdata_i[i] ),
+                    .Y    ( data_z[i] ),
+                    .EN_N ( !write_i   )
+                );
+            `endif
         end
     endgenerate
 
