@@ -15,6 +15,7 @@ module servisia_mem (
 );
     wire [7:0] data_z;
 
+    // Tristate Buffers
     generate;
         genvar i;
         for (i = 0; i < 8; i = i + 1) begin : gen_tristate
@@ -30,21 +31,29 @@ module servisia_mem (
     (* keep *) AM29F080B_90SF i_flash (
         .RESET_N ( rst_ni ),
         .READY (),
-        .CE_N ( clk_i && !addr_i[20] ),
-        .WE_N ( read_i | !write_i ),
-        .OE_N ( !read_i           ),
+        .CE_N ( clk_i ), //&& !addr_i[20] ),
+        .WE_N ( read_i | !write_i | addr_i[20]),
+        .OE_N ( !read_i           | addr_i[20]),
         .A    ( addr_i[19:0]      ),
         .DQ   ( data_z            )
     );
 
     // Instantiate SRAM
     (* keep *) W24129A_35 i_sram (
-        .CS_N ( clk_i && addr_i[20] ),
-        .WE_N ( read_i | !write_i ),
-        .OE_N ( !read_i           ),
+        .CS_N ( clk_i ), //&& addr_i[20] ),
+        .WE_N ( read_i | !write_i | !addr_i[20]),
+        .OE_N ( !read_i           | !addr_i[20]),
         .A    ( addr_i[13:0]      ),
         .IO   ( data_z            )
     );
+    
+    // Observability
+    //wire write_ff;
+    //(* keep *) DFF_74LVC1G175 i_write_ff (
+    //    .CLK ( clk_i    ),
+    //    .D   ( !write_i ),
+    //    .Q   ( write_ff )
+    //);
 
     // Flip Flops
     always @(posedge clk_i) begin

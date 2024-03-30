@@ -29,7 +29,7 @@ sim_synth: programs/hello.binary out
 # Simulate Layout
 sim_layout: programs/hello.binary out
 	bender script verilator -t SIM_LAYOUT > out/sim_script.list
-	verilator --trace -j -F out/sim_script.list --binary --top-module servisia_tb --Wno-UNOPTFLAT --Wno-PINMISSING --Wno-IMPLICIT -o servisia_tb
+	verilator --trace -j -F out/sim_script.list --binary --top-module servisia_tb --Wno-UNOPTFLAT --Wno-IMPLICIT -o servisia_tb
 	./obj_dir/servisia_tb
 
 # Compile Programs

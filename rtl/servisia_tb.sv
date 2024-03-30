@@ -67,7 +67,7 @@ module servisia_tb #(
   `endif
   `endif
 
-  // Apply Power -> Set VDD and GND to 1
+  // Apply Power
   // Default / Unconnected is 0
   `ifdef TARGET_SIM_LAYOUT
     assign i_dut.VDD = 1'b1;

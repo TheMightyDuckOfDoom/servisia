@@ -29,6 +29,8 @@ module servisia (
 
     wire [num_gpios-1:0] wb_gpio_rdt;
 
+    //(* keep *) LCD_16x2 lcd();
+
     // Reset generator
     reset_gen #(
         .RESET_CYCLES ( 2 )
