@@ -16,7 +16,7 @@ update:
 
 # Simulate RTL
 sim: programs/hello.binary out
-	bender script verilator -t SIM > out/sim_script.list
+	bender script verilator -t SIM -t CMOS > out/sim_script.list
 	verilator --trace -j -F out/sim_script.list --binary --top-module servisia_tb --Wno-UNOPTFLAT -o servisia_tb
 	./obj_dir/servisia_tb
 

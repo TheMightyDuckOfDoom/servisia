@@ -6,7 +6,8 @@ module servisia_tb #(
   parameter time    CLK_PERIOD = 10,
   parameter time    CLK_HALF = CLK_PERIOD / 2,
   parameter integer SIM_CYCLES = 100000,
-  parameter         program_file = "programs/hello.binary"
+  parameter         program_file = "programs/hello.binary",
+  parameter MEM_ADDR_WIDTH = 21
 ) ();
 
   logic clk;
@@ -30,6 +31,7 @@ module servisia_tb #(
       for(int i = 0; i < 20; i++) begin
         $display("mem[%d] = %h", i, i_dut.i_servisia_mem.i_flash.i_sram_model.mem[i]);
       end
+      wait(i_generic_ram.mem[0] != 0);
       $display("Reference");
       for(int i = 0; i < 20; i++) begin
         $display("mem[%d] = %h", i, i_generic_ram.mem[i]);
@@ -46,7 +48,7 @@ module servisia_tb #(
     // Reference memory
     wire [7:0] sram_rdata_ref;
     subservient_generic_ram #(
-        .depth   ( 1 << 21      ),
+        .depth   ( 1 << MEM_ADDR_WIDTH ),
         .memfile ( program_file )
     ) i_generic_ram (
         .i_clk   ( i_dut.clk_i      ),

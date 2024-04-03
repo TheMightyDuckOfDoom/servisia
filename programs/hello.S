@@ -1,5 +1,5 @@
 #ifndef GPIO_BASE
-#define GPIO_BASE 0x40000000
+#define GPIO_BASE 0xFFFF0000
 #endif
 
 .globl _start
