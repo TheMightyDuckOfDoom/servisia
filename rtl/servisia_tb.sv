@@ -7,7 +7,7 @@ module servisia_tb #(
   parameter time    CLK_HALF = CLK_PERIOD / 2,
   parameter integer SIM_CYCLES = 100000,
   parameter         program_file = "programs/hello.binary",
-  parameter MEM_ADDR_WIDTH = 21
+  parameter MEM_ADDR_WIDTH = 20
 ) ();
 
   logic clk;

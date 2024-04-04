@@ -8,7 +8,7 @@ module servisia_mem (
 
     input wire        read_i,
     input wire        write_i,
-    input wire [20:0] addr_i,
+    input wire [19:0] addr_i,
     input wire  [7:0] wdata_i,
     
     output reg [7:0] rdata_o
@@ -37,23 +37,21 @@ module servisia_mem (
     endgenerate
 
     // Instantiate FLASH
-    (* keep *) AM29F080B_90SF i_flash (
-        .RESET_N ( rst_ni ),
-        .READY (),
-        .CE_N ( clk_i ), //&& !addr_i[20] ),
-        .WE_N ( read_i | !write_i | addr_i[20]),
-        .OE_N ( !read_i           | addr_i[20]),
-        .A    ( addr_i[19:0]      ),
+    (* keep *) SST39SF040_70_DIP i_flash (
+        .CE_N ( clk_i ),
+        .WE_N ( read_i | !write_i | addr_i[19]),
+        .OE_N ( !read_i           | addr_i[19]),
+        .A    ( addr_i[18:0]      ),
         .DQ   ( data_z            )
     );
 
     // Instantiate SRAM
-    (* keep *) W24129A_35 i_sram (
-        .CS_N ( clk_i ), //&& addr_i[20] ),
-        .WE_N ( read_i | !write_i | !addr_i[20]),
-        .OE_N ( !read_i           | !addr_i[20]),
-        .A    ( addr_i[13:0]      ),
-        .IO   ( data_z            )
+    (* keep *) AS6C4008_55_DIP i_sram (
+        .CS_N ( clk_i ),
+        .WE_N ( read_i | !write_i | !addr_i[19]),
+        .OE_N ( !read_i           | !addr_i[19]),
+        .A    ( addr_i[18:0]      ),
+        .DQ   ( data_z            )
     );
     
     // Observability

@@ -21,7 +21,7 @@ module servisia (
     // GPIOs
     output wire [num_gpios-1:0] gpio_o
 );
-    parameter integer aw = 21;
+    parameter integer aw = 20;
     parameter integer num_gpios = 8;
     parameter integer memsize = 1 << aw;
 
@@ -74,7 +74,12 @@ module servisia (
     );
     `endif
 
-    // GPIO Read Data
+    // GPIO
+    `ifdef FPGA
+    assign gpio_o = 'd0;
+    assign wb_core_rdt = 'd0;
+    assign wb_core_ack = 1'b1;
+    `else
     assign wb_core_rdt[31:num_gpios] = 'd0;
     assign wb_core_rdt[num_gpios-1:0] = wb_gpio_rdt;
 
@@ -90,6 +95,7 @@ module servisia (
         .wb_ack_o ( wb_core_ack ),
         .gpio_o   ( gpio_o      )
     );
+    `endif
 
     // Subservient core
     subservient_core #(
