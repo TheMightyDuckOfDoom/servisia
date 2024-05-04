@@ -1,17 +1,19 @@
-// Copyright 2023 Tobias Senti
+// Copyright 2024 Tobias Senti
 // Solderpad Hardware License, Version 0.51, see LICENSE for details.
 // SPDX-License-Identifier: SHL-0.51
 
 module servisia_mem (
+    // Clock, Reset, and Scan Enable
     input wire clk_i,
     input wire rst_ni,
+    input wire scan_en_i,
 
-    input wire        read_i,
-    input wire        write_i,
-    input wire [19:0] addr_i,
-    input wire  [7:0] wdata_i,
-    
-    output reg [7:0] rdata_o
+    // Memory Interface
+    input  wire        read_i,
+    input  wire        write_i,
+    input  wire [19:0] addr_i,
+    input  wire [ 7:0] wdata_i,
+    output reg  [ 7:0] rdata_o
 );
     wire [7:0] data_z;
 
@@ -38,20 +40,20 @@ module servisia_mem (
 
     // Instantiate FLASH
     (* keep *) SST39SF040_70_DIP i_flash (
-        .CE_N ( clk_i ),
-        .WE_N ( read_i | !write_i | addr_i[19]),
-        .OE_N ( !read_i           | addr_i[19]),
-        .A    ( addr_i[18:0]      ),
-        .DQ   ( data_z            )
+        .CE_N ( clk_i        ),
+        .WE_N ( read_i | !write_i | addr_i[19] | scan_en_i ),
+        .OE_N ( !read_i           | addr_i[19]             ),
+        .A    ( addr_i[18:0] ),
+        .DQ   ( data_z       )
     );
 
     // Instantiate SRAM
     (* keep *) AS6C4008_55_DIP i_sram (
-        .CS_N ( clk_i ),
-        .WE_N ( read_i | !write_i | !addr_i[19]),
-        .OE_N ( !read_i           | !addr_i[19]),
-        .A    ( addr_i[18:0]      ),
-        .DQ   ( data_z            )
+        .CS_N ( clk_i        ),
+        .WE_N ( read_i | !write_i | !addr_i[19] | scan_en_i ),
+        .OE_N ( !read_i           | !addr_i[19]             ),
+        .A    ( addr_i[18:0] ),
+        .DQ   ( data_z       )
     );
     
     // Observability

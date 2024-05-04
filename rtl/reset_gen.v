@@ -6,6 +6,7 @@ module reset_gen #(
     parameter integer RESET_CYCLES = 2
 ) (
     input  wire clk_i,
+    input  wire rst_ni,
     output wire rst_no
 );
     // Internal reset signal from POR
@@ -15,7 +16,8 @@ module reset_gen #(
     reg [RESET_CYCLES-1:0] rst_n_q;
 
     // Power On Reset
-    POR_DS9809PRSS3 i_por (
+    DS9809PRSS3 i_por (
+        .IN     ( rst_ni         ),
         .RESET_N( internal_rst_n )
     );
 

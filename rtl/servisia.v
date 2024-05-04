@@ -1,17 +1,22 @@
-// Copyright 2023 Tobias Senti
+// Copyright 2024 Tobias Senti
 // Solderpad Hardware License, Version 0.51, see LICENSE for details.
 // SPDX-License-Identifier: SHL-0.51
 
 module servisia (
     // Clock and Reset
     input wire  clk_i,
-    `ifndef CMOS
     input wire  rst_ni,
+
+    `ifndef FPGA
+    // Scan Chain
+    input wire  scan_en_i,
+    input wire  scan_d_i,
+    output wire scan_d_o,
     `endif
 
     `ifdef FPGA
     // Memory Interface
-    output wire [20:0] addr_o,
+    output wire [19:0] addr_o,
     output wire        write_o,
     output wire [7:0]  wdata_o,
     output wire        read_o,
@@ -41,6 +46,11 @@ module servisia (
 
     wire [num_gpios-1:0] wb_gpio_rdt;
 
+    `ifndef FPGA
+    // Tie Off Scan Chain
+    assign scan_d_o = scan_d_i;
+    `endif
+
     //(* keep *) LCD_16x2 lcd();
 
     `ifdef CMOS
@@ -48,8 +58,9 @@ module servisia (
         reset_gen #(
             .RESET_CYCLES ( 2 )
         ) i_reset_gen (
-            .clk_i  ( clk_i ),
-            .rst_no ( rst_n )
+            .clk_i  ( clk_i  ),
+            .rst_ni ( rst_ni ),
+            .rst_no ( rst_n  )
         );
     `else
         assign rst_n = rst_ni;
@@ -64,23 +75,25 @@ module servisia (
     assign sram_rdata = rdata_i;
     `else
     servisia_mem i_servisia_mem (
-        .clk_i   ( clk_i      ),
-        .rst_ni  ( rst_n      ),
-        .addr_i  ( sram_wen ? sram_waddr : sram_raddr ),
-        .wdata_i ( sram_wdata ),
-        .write_i ( sram_wen   ),
-        .rdata_o ( sram_rdata ),
-        .read_i  ( sram_ren   )
+        .clk_i     ( clk_i      ),
+        .rst_ni    ( rst_n      ),
+    `ifdef FPGA
+        .scan_en_i ( 1'b0       ),
+    `else
+        .scan_en_i ( scan_en_i  ),
+    `endif
+        .addr_i    ( sram_wen ? sram_waddr : sram_raddr ),
+        .wdata_i   ( sram_wdata ),
+        .write_i   ( sram_wen   ),
+        .rdata_o   ( sram_rdata ),
+        .read_i    ( sram_ren   )
     );
     `endif
 
     // GPIO
-    `ifdef FPGA
-    assign gpio_o = 'd0;
-    assign wb_core_rdt = 'd0;
-    assign wb_core_ack = 1'b1;
-    `else
-    assign wb_core_rdt[31:num_gpios] = 'd0;
+    generate if (num_gpios < 32)
+        assign wb_core_rdt[31:num_gpios] = 'd0;
+    endgenerate
     assign wb_core_rdt[num_gpios-1:0] = wb_gpio_rdt;
 
     servisia_gpo #(
@@ -95,7 +108,6 @@ module servisia (
         .wb_ack_o ( wb_core_ack ),
         .gpio_o   ( gpio_o      )
     );
-    `endif
 
     // Subservient core
     subservient_core #(

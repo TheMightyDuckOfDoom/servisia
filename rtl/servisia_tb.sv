@@ -78,8 +78,12 @@ module servisia_tb #(
 
   // Instantiate DUT
   servisia i_dut (
-    .clk_i  ( clk   ),
-    .gpio_o ( gpio  )
+    .clk_i     ( clk  ),
+    .rst_ni    ( 1'b1 ),
+    .scan_en_i ( 1'b0 ),
+    .scan_d_i  ( 1'b0 ),
+    .scan_d_o  (      ),
+    .gpio_o    ( gpio )
   );
 
   // Monitor GPIO
