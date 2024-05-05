@@ -55,9 +55,7 @@ module servisia (
 
     `ifdef CMOS
         // Reset generator
-        reset_gen #(
-            .RESET_CYCLES ( 2 )
-        ) i_reset_gen (
+        reset_gen i_reset_gen (
             .clk_i  ( clk_i  ),
             .rst_ni ( rst_ni ),
             .rst_no ( rst_n  )
