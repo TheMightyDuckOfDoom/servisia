@@ -3,31 +3,28 @@
 // SPDX-License-Identifier: SHL-0.51
 
 module servisia (
+    `ifdef TARGET_FPGA
     // Clock and Reset
     input wire  clk_i,
     input wire  rst_ni,
 
-    `ifndef FPGA
-    // Scan Chain
-    input wire  scan_en_i,
-    input wire  scan_d_i,
-    output wire scan_d_o,
-    `endif
-
-    `ifdef FPGA
     // Memory Interface
     output wire [19:0] addr_o,
     output wire        write_o,
     output wire [7:0]  wdata_o,
     output wire        read_o,
     input  wire [7:0]  rdata_i,
-    `endif
-
+    
     // GPIOs
-    output wire [num_gpios-1:0] gpio_o
+    input  wire [num_gp_inp-1:0] gpio_i,
+    output wire [num_gp_out-lcd_ios-1:0] gpio_o
+    `endif
 );
     parameter integer aw = 20;
-    parameter integer num_gpios = 8;
+    parameter integer lcd_ios = 10;
+    parameter integer num_gp_out = 8 + lcd_ios;
+    parameter integer num_gp_inp = 8;
+    parameter integer num_gpios  = num_gp_out + num_gp_inp;
     parameter integer memsize = 1 << aw;
 
     wire rst_n;
@@ -44,16 +41,79 @@ module servisia (
     wire [31:0] wb_core_rdt;
     wire        wb_core_ack;
 
+    wire [num_gp_out-1:0] gpio_output;
     wire [num_gpios-1:0] wb_gpio_rdt;
 
-    `ifndef FPGA
-    // Tie Off Scan Chain
-    assign scan_d_o = scan_d_i;
+    `ifndef TARGET_FPGA
+    // GPIO Pin Headers
+    (* keep *) wire [num_gp_inp-1:0] gpio_i;
+    (* keep *) wire [num_gp_out-lcd_ios-1:0] gpio_o;
+
+    (* keep *) PINOUT_8 i_gpio_o (
+        .TO_HEADER ( gpio_o )
+    );
+
+    (* keep *) PININ_8 i_gpio_i (
+        .FROM_HEADER ( gpio_i )
+    );
+
+    // Internal CLK
+    wire internal_clk;
+
+    assign internal_clk = 1'b0;
+
+    // Input Pin Headers for misc signals
+    wire [4:0] inp;
+
+    (* keep *) wire clk_i, rst_ni;
+    (* keep *) wire scan_en_i, scan_d_i, scan_d_o;
+    (* keep *) PININ_5 i_misc_inp (
+        .FROM_HEADER ( inp )
+    );
+
+    (* keep *) MUX2_74LVC1G157 i_clk_mux (
+        .I0 ( internal_clk ),
+        .I1 ( inp[1]       ),
+        .S  ( inp[0]       ),
+        .Y  ( clk_i        )
+    );
+
+    assign rst_ni    = inp[2];
+    assign scan_en_i = inp[3];
+    assign scan_d_i  = inp[4];
+
+    // Disable external reset by default
+    (* keep *) PULLUP_R0603 i_pullup_rst_ni (
+        .Y ( rst_ni )
+    );
+
+    // Disable external clk by default
+    (* keep *) PULLDOWN_R0603 i_pulldown_inp_0 (
+        .Y ( inp[0] )
+    );
+
+    // Disable scan chain by default
+    (* keep *) PULLDOWN_R0603 i_pulldown_scan_en_i (
+        .Y ( scan_en_i )
+    );
+
+    // Default scan chain data input
+    (* keep *) PULLDOWN_R0603 i_pulldown_scan_d_i (
+        .Y ( scan_d_i )
+    );
+
+    // Default scan chain data output
+    (* keep *) PULLDOWN_OUT_R0603 i_pulldown_scan_d_o (
+        .Y ( scan_d_o )
+    );
+
+    // Output Pin Headers for misc signals
+    (* keep *) PINOUT_1 i_misc_out (
+        .TO_HEADER ( scan_d_o )
+    );
     `endif
 
-    //(* keep *) LCD_16x2 lcd();
-
-    `ifdef CMOS
+    `ifdef TARGET_CMOS
         // Reset generator
         reset_gen i_reset_gen (
             .clk_i  ( clk_i  ),
@@ -65,7 +125,7 @@ module servisia (
     `endif
     
     // SRAM interface
-    `ifdef FPGA
+    `ifdef TARGET_FPGA
     assign addr_o     = sram_wen ? sram_waddr : sram_raddr;
     assign write_o    = sram_wen;
     assign wdata_o    = sram_wdata;
@@ -75,11 +135,7 @@ module servisia (
     servisia_mem i_servisia_mem (
         .clk_i     ( clk_i      ),
         .rst_ni    ( rst_n      ),
-    `ifdef FPGA
-        .scan_en_i ( 1'b0       ),
-    `else
         .scan_en_i ( scan_en_i  ),
-    `endif
         .addr_i    ( sram_wen ? sram_waddr : sram_raddr ),
         .wdata_i   ( sram_wdata ),
         .write_i   ( sram_wen   ),
@@ -94,8 +150,9 @@ module servisia (
     endgenerate
     assign wb_core_rdt[num_gpios-1:0] = wb_gpio_rdt;
 
-    servisia_gpo #(
-        .WIDTH ( num_gpios )
+    servisia_gpio #(
+        .OUT_WIDTH ( num_gp_out ),
+        .INP_WIDTH ( num_gp_inp )
     ) gpio (
         .wb_clk_i ( clk_i       ),
         .wb_rst_i ( !rst_n      ),
@@ -104,8 +161,28 @@ module servisia (
         .wb_stb_i ( wb_core_stb ),
         .wb_rdt_o ( wb_gpio_rdt ),
         .wb_ack_o ( wb_core_ack ),
-        .gpio_o   ( gpio_o      )
+        .gpio_i   ( gpio_i      ),
+        .gpio_o   ( gpio_output )
     );
+
+    assign gpio_o = gpio_output[num_gp_out-lcd_ios-1:0];
+
+    `ifdef TARGET_CMOS
+    // Contrast control
+    wire lcd_contrast;
+    VDIV_TRIMMER_POT i_pot (
+        .Y ( lcd_contrast )
+    );
+
+    // LCD
+    LCD_16x2 i_lcd (
+        .Vee( lcd_contrast              ),
+        .RS ( gpio_output[num_gp_out-1] ),
+        .RW ( 1'b0                      ),
+        .EN ( gpio_output[num_gp_out-2] ),
+        .DB ( gpio_output[num_gp_out-3:num_gp_out-10] )
+    );
+    `endif
 
     // Subservient core
     subservient_core #(

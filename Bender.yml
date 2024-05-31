@@ -59,26 +59,26 @@ sources:
 
   - target: CMOS
     defines:
-      CMOS: ~
+      TARGET_CMOS: ~
     files:
       - rtl/servisia_mem.v
-      - rtl/servisia_gpo.v
+      - rtl/servisia_gpio.v
       - rtl/servisia.v
 
   - target: RELAY
     defines:
-      RELAY: ~
+      TARGET_RELAY: ~
     files:
       - rtl/servisia_mem.v
-      - rtl/servisia_gpo.v
+      - rtl/servisia_gpio.v
       - rtl/servisia.v
 
   - target: FPGA
     defines:
-      FPGA: ~
+      TARGET_FPGA: ~
     files:
       - rtl/servisia_mem.v
-      - rtl/servisia_gpo.v
+      - rtl/servisia_gpio.v
       - rtl/servisia.v
 
   # Testbench
