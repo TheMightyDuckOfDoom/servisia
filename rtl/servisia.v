@@ -60,7 +60,9 @@ module servisia (
     // Internal CLK
     wire internal_clk;
 
-    assign internal_clk = 1'b0;
+    servisia_clk i_servisia_clk (
+        .clk_o ( internal_clk )
+    );
 
     // Input Pin Headers for misc signals
     wire [4:0] inp;
@@ -103,7 +105,7 @@ module servisia (
     );
 
     // Default scan chain data output
-    (* keep *) PULLDOWN_OUT_R0603 i_pulldown_scan_d_o (
+    (* keep *) PULLDOWN_OUT_R0603 SCANCHAIN_OUT_DEFAULT (
         .Y ( scan_d_o )
     );
 

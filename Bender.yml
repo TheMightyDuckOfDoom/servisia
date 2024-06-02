@@ -63,6 +63,7 @@ sources:
     files:
       - rtl/servisia_mem.v
       - rtl/servisia_gpio.v
+      - rtl/servisia_clk.v
       - rtl/servisia.v
 
   - target: RELAY

@@ -18,29 +18,7 @@ module servisia_tb #(
   initial begin
     integer file;
     clk = 1'b0;
-
-    // Load program
-    $display("Loading program");
-    `ifdef TARGET_SIM_SYNTH
-      $readmemh(program_file, i_dut.i_servisia_mem__i_flash.i_sram_model.mem);
-    `endif
-    `ifdef TARGET_SIM_LAYOUT
-      $readmemh(program_file, i_dut.i_servisia_mem__i_flash.i_sram_model.mem);
-    `endif
-    `ifndef TARGET_SIM_SYNTH
-    `ifndef TARGET_SIM_LAYOUT
-      $readmemh(program_file, i_dut.i_servisia_mem.i_flash.i_sram_model.mem);
-      for(int i = 0; i < 20; i++) begin
-        $display("mem[%d] = %h", i, i_dut.i_servisia_mem.i_flash.i_sram_model.mem[i]);
-      end
-      wait(i_generic_ram.mem[0] != 0);
-      $display("Reference");
-      for(int i = 0; i < 20; i++) begin
-        $display("mem[%d] = %h", i, i_generic_ram.mem[i]);
-      end
-    `endif
-    `endif
-
+    
     // Running clock
     $display("Starting clock");
     forever #CLK_PERIOD clk = ~clk;
@@ -116,33 +94,54 @@ module servisia_tb #(
     $display();
   end
 
+  always @(i_dut.i_reset_gen__rst_no) begin
+    $display("Reset change rst_n=%d", i_dut.i_reset_gen__rst_no);
+  end
+
   // Testbench
   initial begin
-    int cycle;
+    int cycle, sc_cycle;
     cycle = 0;
 
-    // Reset
-    rst_n = 1'b0;
-    @(posedge clk);
-    rst_n = 1'b1;
-    scan_en  = 1'b0;
-    scan_d_i = 1'b0;
+    // Load program
+    $display("Loading program");
 
-    `ifdef TARGET_SIM_SYNYH
+    `ifdef TARGET_SIM_SYNTH
       $display("Starting post synthesis simulation");
       $dumpfile("dump_post.vcd");
+      $dumpvars();
+
+      $readmemh(program_file, i_dut.i_servisia_mem__i_flash.i_sram_model.mem);
     `endif
     `ifdef TARGET_SIM_LAYOUT
       $display("Starting layout simulation");
       $dumpfile("dump_layout.vcd");
+      $dumpvars();
+      
+      $readmemh(program_file, i_dut.i_servisia_mem__i_flash.i_sram_model.mem);
     `endif
-    `ifndef TARGET_SIM_SYNTH
-    `ifndef TARGET_SIM_LAYOUT
+    `ifdef TARGET_SIM
       $display("Starting simulation");
       $dumpfile("dump.vcd");
+      $dumpvars();
+
+      $readmemh(program_file, i_dut.i_servisia_mem.i_flash.i_sram_model.mem);
+      for(int i = 0; i < 20; i++) begin
+        $display("mem[%d] = %h", i, i_dut.i_servisia_mem.i_flash.i_sram_model.mem[i]);
+      end
+      wait(i_generic_ram.mem[0] != 0);
+      $display("Reference");
+      for(int i = 0; i < 20; i++) begin
+        $display("mem[%d] = %h", i, i_generic_ram.mem[i]);
+      end
     `endif
-    `endif
-    $dumpvars();
+
+    // Reset
+    scan_en  = 1'b0;
+    scan_d_i = 1'b0;
+    rst_n = 1'b0;
+    @(posedge clk);
+    rst_n = 1'b1;
 
     repeat (SIM_CYCLES) begin 
       @(posedge clk);
@@ -160,11 +159,37 @@ module servisia_tb #(
     `endif
     `ifdef TARGET_SIM_LAYOUT
       $display("Layout Simulation finished!");
+      
+      // Test Scan Chain
+      $display("Testing scan chain");
+      sc_cycle = 0;
+      scan_en = 1'b1;
+      scan_d_i = 1'b0;
+      @(posedge clk);
+
+      // Reset all flip-flops to zero
+      while(sc_cycle < 300) begin
+        sc_cycle++;
+        @(posedge clk);
+      end
+
+      // Shift in single one
+      sc_cycle = 0;
+      scan_d_i = 1'b1;
+      @(posedge clk);
+      scan_d_i = 1'b0;
+
+      // Wait until one is shifted out
+      while(scan_d_o != 1'b1) begin
+        $display("Waiting for scan chain to shift out 1");
+        sc_cycle++;
+        @(posedge clk);
+      end
+
+      $display("Scan chain working after %d cycles!", sc_cycle);
     `endif
-    `ifndef TARGET_SIM_SYNTH
-    `ifndef TARGET_SIM_LAYOUT
+    `ifndef TARGET_SIM
       $display("Simulation finished!");
-    `endif
     `endif
     // Stop simulation
     $finish;
